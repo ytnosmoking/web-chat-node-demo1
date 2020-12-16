@@ -48,6 +48,7 @@ Temporary Items
 
 node_modules
 dist
+public/images
 .idea
 application.log
 static/files/*
