@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/element-ui/lib/theme-chalk/index.css"
+    />
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+  </head>
+  <body>
+    <div id="app">
+      <el-row :gutter="20">
+        <el-col :span="12">
+          <el-divider>登录 - 注册</el-divider>
+          <el-button type="warning" @click="isLogin=!isLogin"
+            >{{isLogin?'去注册':'去登录'}}</el-button
+          >
+          <el-form :mode="form" label-width="100px" style="width: 500px">
+            <el-form-item label="用户名">
+              <el-input type="text" v-model="form.name"> </el-input>
+            </el-form-item>
+            <el-form-item v-show="!isLogin" label="昵称">
+              <el-input type="text" v-model="form.nickname"> </el-input>
+            </el-form-item>
+            <el-form-item v-show="!isLogin" label="头像">
+              <el-upload
+                :limit="1"
+                :file-list="form.avatar"
+                action="#"
+                list-type="picture-card"
+                :auto-upload="false"
+                :on-change="changeFormAvatar"
+              >
+                <el-button size="small" type="primary">点击上传</el-button>
+                <!-- <div slot="tip" class="el-upload__tip">
+                  只能上传jpg/png文件，且不超过500kb
+                </div> -->
+              </el-upload>
+            </el-form-item>
+            <el-form-item label="性别" v-show="!isLogin">
+              <el-radio-group v-model="form.sex">
+                <el-radio :label="0">男</el-radio>
+                <el-radio :label="1">女</el-radio>
+              </el-radio-group>
+            </el-form-item>
+            <el-form-item label="电话号" v-show="!isLogin">
+              <el-input type="text" v-model="form.iphone"> </el-input>
+            </el-form-item>
+            <el-form-item label="密码">
+              <el-input type="password" v-model="form.password"> </el-input>
+            </el-form-item>
+            <el-form-item>
+              <el-button type="primary" v-show="isLogin" @click.stop="login"
+                >登录</el-button
+              >
+              <el-button type="danger" v-show="!isLogin" @click.stop="register"
+                >注册</el-button
+              >
+            </el-form-item>
+          </el-form>
+        </el-col>
+        <el-col :span="12">
+          <el-divider>获取修改</el-divider>
+
+          <el-button type="primary" @click="getUserInfo">获取</el-button>
+          <el-row :gutter="20">
+            <el-form :mode="userInfo" label-width="100px">
+              <!-- <el-form-item label="用户名">
+                <el-input type="text" disabled  v-model="userInfo.name"> </el-input>
+              </el-form-item> -->
+              <el-form-item label="头像">
+                <el-upload
+                  :limit="1"
+                  :file-list="userInfo.avatar"
+                  action="#"
+                  list-type="picture-card"
+                  :auto-upload="false"
+                  :on-change="changeUserFormAvatar"
+                >
+                  <el-button size="small" type="primary">点击上传</el-button>
+                  <!-- <div slot="tip" class="el-upload__tip">
+                    只能上传jpg/png文件，且不超过500kb
+                  </div> -->
+                </el-upload>
+              </el-form-item>
+              <el-form-item label="昵称">
+                <el-input type="text" v-model="userInfo.nickname"> </el-input>
+              </el-form-item>
+              <el-form-item label="性别">
+                <el-radio-group v-model="userInfo.sex">
+                  <el-radio :label="0">男</el-radio>
+                  <el-radio :label="1">女</el-radio>
+                </el-radio-group>
+              </el-form-item>
+              <el-form-item label="电话号">
+                <el-input type="text" v-model="userInfo.iphone"> </el-input>
+              </el-form-item>
+              <!-- <el-form-item label="密码">
+                <el-input type="text" v-model="userInfo.password"> </el-input>
+              </el-form-item> -->
+              <el-form-item>
+                <el-button type="primary" @click.stop="updateUserInfo"
+                  >修改</el-button
+                >
+                <el-button type="danger" @click.stop="delUserInfo"
+                  >删除</el-button
+                >
+              </el-form-item>
+            </el-form>
+          </el-row>
+        </el-col>
+      </el-row>
+
+      <el-row :gutter="20">
+        <el-col :span="12">
+          <el-divider>更新密码</el-divider>
+          <el-form :mode="codeForm" label-width="100px">
+            <el-form-item label="旧密码">
+              <el-input v-model="codeForm.oldCode"></el-input>
+            </el-form-item>
+            <el-form-item label="新密码">
+              <el-input v-model="codeForm.newCode"></el-input>
+            </el-form-item>
+            <el-form-item label="确认">
+              <el-input v-model="codeForm.againCode"></el-input>
+            </el-form-item>
+            <el-form-item>
+              <el-button @click="updateCode">更新密码</el-button>
+            </el-form-item>
+          </el-form>
+        </el-col>
+        <el-col :span="12"></el-col>
+      </el-row>
+
+      <el-row :gutter="20">
+        <el-col :span="12">
+          <el-divider> get -- Test</el-divider>
+          <div>
+            <el-button type="primary" @click="getTest">getTest</el-button>
+            <el-row
+              type="flex"
+              justify="space-between"
+              v-for="(info, index) in infoList"
+              :key="index"
+              :gutter="10"
+            >
+              <el-col>age : {{info.age}}</el-col>
+              <el-col>sex : {{info.sex|isSex}}</el-col>
+              <el-col>name : {{info.name}}</el-col>
+              <el-col>nick : {{info.nickname}}</el-col>
+              <el-col>iphone : {{info.iphone}}</el-col>
+            </el-row>
+          </div>
+        </el-col>
+        <el-col :span="12">
+          <el-divider>post --- Test - List</el-divider>
+          <el-button type="primary" @click="postTestList"
+            >postTestList</el-button
+          >
+          <el-row
+            v-for="(info, index) in otherList"
+            :key="index"
+            type="flex"
+            justify="space-between"
+            :gutter="10"
+          >
+            <el-col>age : {{info.age}}</el-col>
+            <el-col>sex : {{info.sex|isSex}}</el-col>
+            <el-col>name : {{info.name}}</el-col>
+          </el-row>
+        </el-col>
+      </el-row>
+
+      <el-divider></el-divider>
+    </div>
+  </body>
+  <!-- <script src="https://cdn.jsdelivr.net/npm/vue"></script> -->
+  <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+  <!-- 引入组件库 -->
+  <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+  <script>
+    const localStorage = window.localStorage;
+    const KEY = 'app';
+    let storeStorage = null;
+    const vDom = new Vue({
+      el: '#app',
+      data: {
+        form: {
+          avatar: [],
+          name: '',
+          nickname: '',
+          sex: 0,
+          iphone: '',
+          src: '',
+          password: '',
+        },
+        infoList: [],
+        otherList: [],
+        others: [],
+        isLogin: true,
+        userInfo: {
+          avatar: [],
+          nickname: '',
+          iphone: '',
+          sex: 0,
+        },
+        codeForm: {
+          oldCode: '',
+          newCode: '',
+          againCode: '',
+        },
+      },
+      filters: {
+        isSex(val) {
+          return val ? '女' : '男';
+        },
+      },
+      methods: {
+        // 测试 数据
+        getTest() {
+          axios
+            .get('/test')
+            .then((res) => {
+              console.log(res);
+              this.$message({
+                message: res.msg || '测试数据 GET 有问题',
+                type: res.code === 200 ? 'success' : 'error',
+              });
+              if (res.code === 200) {
+                this.infoList = res.data;
+              }
+            })
+            .catch((err) => {
+              console.log(err);
+            });
+        },
+        // 测试数据
+        postTestList() {
+          axios
+            .post('/test/list')
+            .then((res) => {
+              console.log(res);
+              this.$message({
+                message: res.msg || '测试数据有问题',
+                type: res.code === 200 ? 'success' : 'error',
+              });
+              if (res.code === 200) {
+                this.otherList = res.data;
+              }
+            })
+            .catch((err) => {
+              console.log(err);
+            });
+        },
+        // 登录
+        login() {
+          axios
+            .post('/api/login', this.form)
+            .then((res) => {
+              console.log(res);
+              this.$message({
+                message: res.msg || '登录有问题',
+                type: res.code === 200 ? 'success' : 'error',
+              });
+              if (res.code === 200) {
+                setItem('token', res.token);
+              }
+            })
+            .catch((err) => console.log(err));
+        },
+        //注册
+        register() {
+          axios
+            .post('/api/register', this.form)
+            .then((res) => {
+              console.log(res);
+              this.$message({
+                message: res.msg || '注册有问题',
+                type: res.code === 200 ? 'success' : 'error',
+              });
+            })
+            .catch((err) => {
+              console.log(err);
+            });
+        },
+        uploadAvatar(file,fileList, info) {
+          info.avatar = fileList;
+          console.log(fileList);
+          const form = new FormData();
+          form.append('avatar', file.raw);
+          axios
+            .post('/api/upload', form, {
+              headers: {
+                'Content-Type': 'multipart/form-data',
+              },
+            })
+            .then((res) => {
+              console.log(res);
+
+              this.$message({
+                message: res.msg || '上传有问题',
+                type: res.code === 200 ? 'success' : 'error',
+              });
+              if (res.code === 200) {
+                info.src = res.url;
+              }
+            })
+            .catch((err) => console.log(err));
+        },
+        // 注册上传
+        changeFormAvatar(file, fileList) {
+          this.uploadAvatar(file,fileList, this.form)
+        },
+        // 修改上传
+        changeUserFormAvatar(file, fileList) {
+          this.uploadAvatar(file,fileList, this.userInfo)
+        },
+
+        // 获取用户信息
+        getUserInfo() {
+          axios
+            .get('/api/userInfo?id=1')
+            .then((res) => {
+              this.$message({
+                message: res.msg || '获取用户信息',
+                type: res.code === 200 ? 'success' : 'error',
+              });
+              if (res.code !== 200) {
+                return;
+              }
+              this.userInfo = res.info;
+              if (this.userInfo.src) {
+                this.userInfo.avatar = [
+                  {
+                    url: this.userInfo.src,
+                  },
+                ];
+              }
+              this.userInfo.sex = this.userInfo.sex ? 1 : 0;
+            })
+            .catch((err) => conosle.log(err));
+        },
+        // 更新用户信息
+        updateUserInfo() {
+          console.log(this.userInfo);
+          axios
+            .patch('/api/userInfo', this.userInfo)
+            .then((res) => {
+              this.$message({
+                message: res.msg || '更新数据',
+                type: res.code === 200 ? 'success' : 'error',
+              });
+              if (res.code !== 200) {
+                return;
+              }
+            })
+            .catch((err) => console.log(err));
+        },
+        // 删除用户
+        delUserInfo() {
+          console.log(this.userInfo);
+          axios
+            .delete('/api/userInfo', this.userInfo)
+            .then((res) => {
+              console.log(res);
+            })
+            .catch((err) => console.log(err));
+        },
+        // 更新密码
+        updateCode() {
+          const { oldCode, newCode, againCode } = this.codeForm;
+          if (newCode !== againCode) {
+            return this.$message({
+              message: '两次密码不一样',
+              type: 'error',
+            });
+          }
+          axios
+            .patch('api/userInfoCode', this.codeForm)
+            .then((res) => {
+              console.log(res);
+              this.$message({
+                message: res.msg || '修改密码',
+                type: res.code === 200 ? 'success' : 'error',
+              });
+              if (res.code !== 200) {
+                return;
+              }
+            })
+            .catch((err) => console.log(err));
+        },
+      },
+    });
+
+    const baseURL = '';
+    // 请求统一处理
+    axios.interceptors.request.use(
+      async (config) => {
+        if (config.url && config.url.charAt(0) === '/') {
+          config.url = `${baseURL}${config.url}`;
+        }
+        config.headers.authorization = `Bearer ${getItem('token') || ''}`;
+        return config;
+      },
+      (error) => Promise.reject(error)
+    );
+
+    // 对返回的内容做统一处理
+    axios.interceptors.response.use(
+      (response) => {
+        if (response.status === 200) {
+          if (response.data.code === 205) {
+            vDom.$message({
+              message: '重新登录，token有问题',
+              duration: 2000,
+              type: 'error',
+            });
+            clear();
+          }
+          return response.data;
+        }
+        return Promise.reject(response);
+      },
+      (error) => {
+        console.log(error);
+        let message = '';
+
+        if (error) {
+          if (error.response && error.response.status === 401) {
+            message = error.response.data.msg;
+          }
+          message = '网络异常，请检查你的网络。';
+          vDom.$message({
+            message,
+            duration: 2000,
+            type: 'error',
+          });
+        } else {
+          message = '未知错误';
+          vDom.$message({
+            message,
+            duration: 2000,
+            type: 'error',
+          });
+        }
+
+        return Promise.reject(error);
+      }
+    );
+    function store() {
+      try {
+        if (!storeStorage) {
+          storeStorage = JSON.parse(localStorage.getItem(KEY) || '{}');
+        } else {
+          localStorage.setItem(KEY, JSON.stringify(storeStorage));
+        }
+      } catch (e) {
+        console.log(e);
+      }
+    }
+
+    store();
+
+    function has(key) {
+      return Object.hasOwnProperty.call(storeStorage, key);
+    }
+    function getItem(key) {
+      if (!has(key)) {
+        return false;
+      }
+      storeStorage = JSON.parse(localStorage.getItem(KEY) || '{}');
+      const { value, duration, time } = storeStorage[key] || {};
+
+      if (Date.now() - time <= duration) {
+        return value;
+      }
+
+      removeItem(key);
+      return false;
+    }
+
+    function setItem(key, value, duration = Number.MAX_SAFE_INTEGER) {
+      storeStorage[key] = {
+        value,
+        duration,
+        time: Date.now(),
+      };
+      store();
+    }
+
+    function removeItem(key) {
+      if (has(key)) {
+        delete storeStorage[key];
+        store();
+      }
+    }
+
+    function clear() {
+      storeStorage = {};
+      store();
+    }
+  </script>
+</html>
