@@ -9,7 +9,7 @@ const fs = require('fs')
 
 require('./config/mongoose')
 const router = require('./routes')
-
+console.log(1)
 const app = express();
 
 // 创建文件夹
